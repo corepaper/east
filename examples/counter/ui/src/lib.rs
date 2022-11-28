@@ -1,4 +1,4 @@
-use east::{DynViewBuilder, Component, Partial};
+use east::{DynViewBuilder, Component, Partial, Markup, view_with_component};
 use sycamore::prelude::*;
 use serde::{Serialize, Deserialize};
 
@@ -35,10 +35,10 @@ pub struct Index;
 impl<AnyComponent> Partial<AnyComponent> for Index where
     AnyComponent: From<Counter>
 {
-    fn view(&self) -> String {
-        let counter1 = Counter { id: 1 };
-        let counter2 = Counter { id: 2 };
-
-        format!("{}{}", Partial::<AnyComponent>::view(&counter1), Partial::<AnyComponent>::view(&counter2))
+    fn view(&self) -> Markup {
+        view_with_component!(AnyComponent, {
+            Counter { id: 1 },
+            Counter { id: 2 },
+        })
     }
 }
