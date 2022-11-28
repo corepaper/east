@@ -1,15 +1,18 @@
-use east::{Partial, NoComponent, view};
+use east::{Partial, NoComponent, Markup, view};
 
-pub struct Index;
+#[derive(Default)]
+pub struct Index {
+    children: Markup,
+}
 
 impl<AnyComponent> Partial<AnyComponent> for Index {
-    fn view(&self) -> String {
+    fn view(&self) -> Markup {
         view! {
             div {
                 class: "test-class",
 
                 "This is a test page.",
-                button { "Click me!" }
+                self.children,
             }
         }
     }
@@ -17,5 +20,10 @@ impl<AnyComponent> Partial<AnyComponent> for Index {
 
 #[test]
 fn test_basic_macro() {
-    assert_eq!(Partial::<NoComponent>::view(&Index), "<div class=\"test-class\">This is a test page.</div>");
+    let view = view! {
+        Index {
+            button { "Click me!" }
+        }
+    };
+    assert_eq!(view.0, "<div class=\"test-class\">This is a test page.<button>Click me!</button></div>");
 }

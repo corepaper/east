@@ -44,7 +44,7 @@ impl Parse for Child {
 }
 
 #[derive(Debug, Clone)]
-pub struct Children(Punctuated<Child, Token![,]>);
+pub struct Children(pub Punctuated<Child, Token![,]>);
 
 impl Parse for Children {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -70,9 +70,40 @@ impl Parse for AttributeOrChild {
 
 #[derive(Debug, Clone)]
 pub struct Element {
-    pub tag: syn::ExprPath,
+    pub tag: syn::Path,
     pub brace_token: syn::token::Brace,
     pub attributes_or_children: Punctuated<AttributeOrChild, Token![,]>,
+}
+
+impl Element {
+    pub fn html_tag(&self) -> Option<String> {
+        self.tag.get_ident().map(|i| i.to_string())
+            .and_then(|i| if HTML_TAGS.contains(&i.as_str()) { Some(i) } else { None })
+    }
+
+    pub fn attributes(&self) -> Vec<Attribute> {
+        let mut attributes = Vec::new();
+
+        for attribute_or_child in &self.attributes_or_children {
+            if let AttributeOrChild::Attribute(attribute) = &attribute_or_child {
+                attributes.push(attribute.clone());
+            }
+        }
+
+        attributes
+    }
+
+    pub fn children(&self) -> Vec<Child> {
+        let mut children = Vec::new();
+
+        for attribute_or_child in &self.attributes_or_children {
+            if let AttributeOrChild::Child(child) = &attribute_or_child {
+                children.push(child.clone());
+            }
+        }
+
+        children
+    }
 }
 
 impl Parse for Element {
