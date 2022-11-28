@@ -3,7 +3,7 @@ pub mod escape;
 use serde::{Serialize, Deserialize};
 use sycamore::{view::View, generic_node::GenericNode, reactive::Scope};
 
-pub use east_macro::view;
+pub use east_macro::{view, view_with_component};
 
 pub struct DynViewBuilder<G: GenericNode>(pub Box<dyn FnOnce(Scope) -> View<G>>);
 
@@ -12,16 +12,27 @@ pub trait Component {
 }
 
 pub trait Partial<Component> {
-    fn view(&self) -> Markup;
+    fn view(&self) -> Markup {
+        self.view_multi(Default::default())
+    }
+
+    fn view_multi(&self, children: Markup) -> Markup {
+        self.view()
+    }
 }
 
-impl<T: Component, AnyComponent> Partial<AnyComponent> for T where
+impl<T: Component + Serialize, AnyComponent> Partial<AnyComponent> for T where
     AnyComponent: From<T>,
 {
     fn view(&self) -> Markup {
-        PreEscaped(sycamore::render_to_string(|cx| {
-            self.view_builder().0(cx)
-        }))
+        view_with_component!(AnyComponent, {
+            div {
+                data_component: &serde_json::to_string(&self).unwrap(),
+                PreEscaped(sycamore::render_to_string(|cx| {
+                    self.view_builder().0(cx)
+                }))
+            }
+        })
     }
 }
 

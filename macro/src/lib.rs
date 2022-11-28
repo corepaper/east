@@ -2,8 +2,21 @@ mod node;
 
 use syn::{Result, Ident, Token, parse_macro_input, parenthesized, bracketed, braced, parse::{Parse, ParseStream}, ext::IdentExt, token::{Paren, Bracket}};
 use proc_macro2::Span;
+use proc_macro_crate::{crate_name, FoundCrate};
 use quote::quote;
 use crate::node::{Child, Children};
+
+fn east_crate() -> proc_macro2::TokenStream {
+    let found_crate = crate_name("east").expect("east is present in `Cargo.toml`");
+
+    match found_crate {
+        FoundCrate::Itself => quote!( crate ),
+        FoundCrate::Name(name) => {
+            let ident = Ident::new(&name, Span::call_site());
+            quote!( #ident )
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 struct View {
@@ -39,6 +52,7 @@ impl Parse for ViewWithComponent {
 }
 
 fn generate_children_to_string(component_type: proc_macro2::TokenStream, children: Vec<Child>) -> proc_macro2::TokenStream {
+    let east_crate = east_crate();
     let output = Ident::new("__east_output", Span::mixed_site());
 
     let children = children.into_iter().map(|child| {
@@ -49,7 +63,7 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
                         let name = proc_macro2::Literal::string(&format!("{}", attribute.name));
                         let value = attribute.value;
                         quote! {
-                            format!("{}=\"{}\"", #name, ::east::escape::escape(#value))
+                            format!("{}=\"{}\"", #name, #east_crate::escape::escape(#value))
                         }
                     });
 
@@ -88,26 +102,23 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
 
                     if element.children().is_empty() {
                         quote! {
-                            #output.push_str(&::east::Partial::<#component_type>::view(&#tag {
+                            #output.push_str(&#east_crate::Partial::<#component_type>::view(&#tag {
                                 #(#attributes),*
-                                ..Default::default()
                             }).0);
                         }
                     } else {
                         let children = generate_children_to_string(component_type.clone(), element.children());
 
                         quote! {
-                            #output.push_str(&::east::Partial::<#component_type>::view(&#tag {
+                            #output.push_str(&#east_crate::Partial::<#component_type>::view_multi(&#tag {
                                 #(#attributes),*
-                                children: #children,
-                                ..Default::default()
-                            }).0);
+                            }, #children).0);
                         }
                     }
                 }
             },
             Child::Expr(expr) => {
-                quote! { #output.push_str(&::east::Partial::<#component_type>::view(&#expr).0); }
+                quote! { #output.push_str(&#east_crate::Partial::<#component_type>::view(&#expr).0); }
             },
         }
     });
@@ -117,14 +128,23 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
 
         #(#children)*
 
-        ::east::PreEscaped(#output)
+        #east_crate::PreEscaped(#output)
     } }
 }
 
 #[proc_macro]
 pub fn view(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let east_crate = east_crate();
     let view = parse_macro_input!(input as View);
-    let component_type = quote! { ::east::NoComponent };
+    let component_type = quote! { #east_crate::NoComponent };
 
     generate_children_to_string(component_type, view.children.0.into_iter().collect()).into()
+}
+
+#[proc_macro]
+pub fn view_with_component(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let view_with_component = parse_macro_input!(input as ViewWithComponent);
+    let component_type = view_with_component.component_type;
+
+    generate_children_to_string(quote! { #component_type }, view_with_component.children.0.into_iter().collect()).into()
 }

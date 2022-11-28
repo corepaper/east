@@ -1,18 +1,16 @@
 use east::{Partial, NoComponent, Markup, view};
 
 #[derive(Default)]
-pub struct Index {
-    children: Markup,
-}
+pub struct Index;
 
 impl<AnyComponent> Partial<AnyComponent> for Index {
-    fn view(&self) -> Markup {
+    fn view_multi(&self, children: Markup) -> Markup {
         view! {
             div {
                 class: "test-class",
 
                 "This is a test page.",
-                self.children,
+                children,
             }
         }
     }
