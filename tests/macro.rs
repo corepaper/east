@@ -1,14 +1,9 @@
-use east::{Render, RenderMulti, NoComponent, Markup, view};
+use east::{Render, RenderMulti, NoComponent, Markup, view, render_from_multi};
 
 #[derive(Default)]
 pub struct Index;
 
-impl<AnyComponent> Render<AnyComponent> for Index {
-    fn render(self) -> Markup {
-        RenderMulti::<AnyComponent>::render_multi(self, Default::default())
-    }
-}
-
+#[render_from_multi]
 impl<AnyComponent> RenderMulti<AnyComponent> for Index {
     fn render_multi(self, children: Markup) -> Markup {
         view! {

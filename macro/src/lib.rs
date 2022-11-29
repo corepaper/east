@@ -150,8 +150,26 @@ pub fn view_with_component(input: proc_macro::TokenStream) -> proc_macro::TokenS
 }
 
 #[proc_macro_attribute]
-pub fn render_from_multi(args: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn render_from_multi(_args: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let east_crate = east_crate();
     let input = parse_macro_input!(input as ItemImpl);
+    let original = input.clone();
 
-    unimplemented!()
+    let generics = input.generics;
+    let last_trait_seg = input.trait_.expect("trait must exist").1
+        .segments.last().expect("component type must exist").clone();
+    let last_trait_seg_args = last_trait_seg.arguments;
+    assert_eq!(format!("{}", last_trait_seg.ident), "RenderMulti");
+
+    let self_ty = input.self_ty;
+
+    quote! {
+        impl #generics #east_crate::Render #last_trait_seg_args for #self_ty {
+            fn render(self) -> #east_crate::Markup {
+                #east_crate::RenderMulti::#last_trait_seg_args::render_multi(self, Default::default())
+            }
+        }
+
+        #original
+    }.into()
 }
