@@ -1,4 +1,4 @@
-use crate::{Markup, PreEscaped, GenericNode, Scope, View};
+use crate::{Markup, PreEscaped, GenericNode, Scope, View, builder};
 
 pub trait Render<Component> {
     fn render(self) -> Markup;
@@ -11,31 +11,6 @@ pub trait RenderMulti<Component> {
 pub trait RenderDyn<G: GenericNode> {
     fn render_dyn(self, cx: Scope) -> View<G>;
 }
-
-// impl<T: DynRender + Serialize, AnyComponent> Render<AnyComponent> for T where
-//     AnyComponent: From<T>
-// {
-//     fn render(self) -> Markup {
-//         if let Ok(serialized) = serde_json::to_string(&self) {
-//             render_with_component!(AnyComponent, {
-//                 div {
-//                     data_component: serialized,
-//                     PreEscaped(sycamore::render_to_string(|cx| {
-//                         self.dyn_render(cx)
-//                     })),
-//                 }
-//             })
-//         } else {
-//             render_with_component!(AnyComponent, {
-//                 div {
-//                     PreEscaped(sycamore::render_to_string(|cx| {
-//                         self.dyn_render(cx)
-//                     })),
-//                 }
-//             })
-//         }
-//     }
-// }
 
 impl<AnyComponent> Render<AnyComponent> for String {
     fn render(self) -> Markup {
@@ -54,6 +29,18 @@ impl<T: AsRef<str>, AnyComponent> Render<AnyComponent> for PreEscaped<T> {
         let mut s = String::new();
         s.push_str(self.0.as_ref());
         PreEscaped(s)
+    }
+}
+
+impl<G: GenericNode> RenderDyn<G> for String {
+    fn render_dyn(self, _cx: Scope) -> View<G> {
+        builder::t(self)
+    }
+}
+
+impl<'a, G: GenericNode> RenderDyn<G> for &'a str {
+    fn render_dyn(self, _cx: Scope) -> View<G> {
+        builder::t(self)
     }
 }
 

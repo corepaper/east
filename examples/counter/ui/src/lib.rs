@@ -1,4 +1,4 @@
-use east::{Render, RenderDyn, Markup, render_with_component, render_from_dyn};
+use east::{Render, RenderDyn, Markup, render_with_component, render_from_dyn, render_dyn};
 use sycamore::prelude::*;
 use serde::{Serialize, Deserialize};
 
@@ -23,7 +23,15 @@ impl<G: GenericNode> RenderDyn<G> for Counter {
     fn render_dyn(self, cx: Scope) -> View<G> {
         let id = create_signal(cx, self.id);
 
-        view!(cx, button(on:click = |_| id.set(2)) { "Click me" (*id.get()) })
+        render_dyn!(cx, {
+            button {
+                on_click: |_| id.set(2),
+
+                "Click me", id.get().to_string()
+            }
+        })
+
+        // view!(cx, button(on:click = |_| id.set(2)) { "Click me" (*id.get()) })
     }
 }
 

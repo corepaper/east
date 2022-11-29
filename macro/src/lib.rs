@@ -18,39 +18,6 @@ fn east_crate() -> proc_macro2::TokenStream {
     }
 }
 
-#[derive(Clone, Debug)]
-struct View {
-    children: Children,
-}
-
-impl Parse for View {
-    fn parse(input: ParseStream) -> Result<Self> {
-        Ok(Self {
-            children: input.parse()?,
-        })
-    }
-}
-
-#[derive(Clone, Debug)]
-struct ViewWithComponent {
-    component_type: syn::Type,
-    comma_token: Token![,],
-    brace_token: syn::token::Brace,
-    children: Children,
-}
-
-impl Parse for ViewWithComponent {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let content;
-        Ok(Self {
-            component_type: input.parse()?,
-            comma_token: input.parse()?,
-            brace_token: braced!(content in input),
-            children: content.parse()?,
-        })
-    }
-}
-
 fn generate_children_to_string(component_type: proc_macro2::TokenStream, children: Vec<Child>) -> proc_macro2::TokenStream {
     let east_crate = east_crate();
     let output = Ident::new("__east_output", Span::mixed_site());
@@ -60,7 +27,9 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
             Child::Element(element) => {
                 if let Some(html_tag) = element.html_tag() {
                     let attributes = element.attributes().into_iter().map(|attribute| {
-                        let name = proc_macro2::Literal::string(&format!("{}", attribute.name));
+                        let raw_name = format!("{}", attribute.name).replace("_", "-");
+
+                        let name = proc_macro2::Literal::string(&raw_name);
                         let value = attribute.value;
                         quote! {
                             format!("{}=\"{}\"", #name, #east_crate::escape(&#value))
@@ -132,21 +101,157 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
     } }
 }
 
+fn generate_children_to_view(scope: Ident, children: Vec<Child>) -> proc_macro2::TokenStream {
+    let east_crate = east_crate();
+
+    let children = children.into_iter().map(|child| {
+        match child {
+            Child::Element(element) => {
+                if let Some(html_tag) = element.html_tag() {
+                    let attributes = element.attributes().into_iter().map(|attribute| {
+                        let raw_name = format!("{}", attribute.name).replace("_", "-");
+
+                        if raw_name.starts_with("on-") {
+                            let mut raw_name = raw_name;
+                            let name = proc_macro2::Literal::string(&raw_name.split_off(3));
+                            let value = attribute.value;
+
+                            quote! {
+                                .on(#name, #value)
+                            }
+                        } else {
+                            let name = proc_macro2::Literal::string(&raw_name);
+                            let value = attribute.value;
+
+                            quote! {
+                                .dyn_attr(#name, { let #scope = #scope.clone(); move || #value })
+                            }
+                        }
+                    });
+
+                    let children = if element.children().is_empty() {
+                        quote! { }
+                    } else {
+                        let children = generate_children_to_view(scope.clone(), element.children());
+                        quote! {
+                            .dyn_c({ let #scope = #scope.clone(); move || #children })
+                        }
+                    };
+
+                    let html_tag = proc_macro2::Literal::string(&html_tag);
+                    quote! {
+                        #east_crate::builder::tag(#html_tag)
+                        #(#attributes)*
+                        #children
+                        .view(#scope)
+                    }
+                } else {
+                    let tag = element.tag.clone();
+                    let attributes = element.attributes().into_iter().map(|attribute| {
+                        let name = attribute.name;
+                        let value = attribute.value;
+                        quote! { #name: #value }
+                    });
+
+                    if element.children().is_empty() {
+                        quote! {
+                            #east_crate::RenderDyn::render_dyn(#tag {
+                                #(#attributes),*
+                            }, #scope.clone())
+                        }
+                    } else {
+                        panic!("Dynamic element tags do not support children.");
+                    }
+                }
+            },
+            Child::Expr(expr) => {
+                quote! { #east_crate::RenderDyn::render_dyn(#expr, #scope) }
+            },
+        }
+    });
+
+    quote! { {
+        #east_crate::builder::fragment([
+            #(#children),*
+        ])
+    } }
+}
+
+#[derive(Clone, Debug)]
+struct Render {
+    children: Children,
+}
+
+impl Parse for Render {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Self {
+            children: input.parse()?,
+        })
+    }
+}
+
 #[proc_macro]
 pub fn render(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let east_crate = east_crate();
-    let view = parse_macro_input!(input as View);
+    let view = parse_macro_input!(input as Render);
     let component_type = quote! { #east_crate::NoComponent };
 
     generate_children_to_string(component_type, view.children.0.into_iter().collect()).into()
 }
 
+#[derive(Clone, Debug)]
+struct RenderWithComponent {
+    component_type: syn::Type,
+    comma_token: Token![,],
+    brace_token: syn::token::Brace,
+    children: Children,
+}
+
+impl Parse for RenderWithComponent {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        Ok(Self {
+            component_type: input.parse()?,
+            comma_token: input.parse()?,
+            brace_token: braced!(content in input),
+            children: content.parse()?,
+        })
+    }
+}
+
 #[proc_macro]
 pub fn render_with_component(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let view_with_component = parse_macro_input!(input as ViewWithComponent);
+    let view_with_component = parse_macro_input!(input as RenderWithComponent);
     let component_type = view_with_component.component_type;
 
     generate_children_to_string(quote! { #component_type }, view_with_component.children.0.into_iter().collect()).into()
+}
+
+#[derive(Clone, Debug)]
+struct RenderDyn {
+    scope_ident: Ident,
+    comma_token: Token![,],
+    brace_token: syn::token::Brace,
+    children: Children,
+}
+
+impl Parse for RenderDyn {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        Ok(Self {
+            scope_ident: input.parse()?,
+            comma_token: input.parse()?,
+            brace_token: braced!(content in input),
+            children: content.parse()?,
+        })
+    }
+}
+
+#[proc_macro]
+pub fn render_dyn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let render_dyn = parse_macro_input!(input as RenderDyn);
+
+    generate_children_to_view(render_dyn.scope_ident, render_dyn.children.0.into_iter().collect()).into()
 }
 
 #[proc_macro_attribute]
