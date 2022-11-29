@@ -1,6 +1,6 @@
 mod node;
 
-use syn::{Result, Ident, Token, parse_macro_input, parenthesized, bracketed, braced, parse::{Parse, ParseStream}, ext::IdentExt, token::{Paren, Bracket}};
+use syn::{Result, Ident, Token, ItemImpl, parse_macro_input, parenthesized, bracketed, braced, parse::{Parse, ParseStream}, ext::IdentExt, token::{Paren, Bracket}};
 use proc_macro2::Span;
 use proc_macro_crate::{crate_name, FoundCrate};
 use quote::quote;
@@ -63,7 +63,7 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
                         let name = proc_macro2::Literal::string(&format!("{}", attribute.name));
                         let value = attribute.value;
                         quote! {
-                            format!("{}=\"{}\"", #name, #east_crate::escape::escape(#value))
+                            format!("{}=\"{}\"", #name, #east_crate::escape(#value))
                         }
                     });
 
@@ -102,7 +102,7 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
 
                     if element.children().is_empty() {
                         quote! {
-                            #output.push_str(&#east_crate::Partial::<#component_type>::view(&#tag {
+                            #output.push_str(&#east_crate::Render::<#component_type>::render(#tag {
                                 #(#attributes),*
                             }).0);
                         }
@@ -110,7 +110,7 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
                         let children = generate_children_to_string(component_type.clone(), element.children());
 
                         quote! {
-                            #output.push_str(&#east_crate::Partial::<#component_type>::view_multi(&#tag {
+                            #output.push_str(&#east_crate::RenderMulti::<#component_type>::render_multi(#tag {
                                 #(#attributes),*
                             }, #children).0);
                         }
@@ -118,7 +118,7 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
                 }
             },
             Child::Expr(expr) => {
-                quote! { #output.push_str(&#east_crate::Partial::<#component_type>::view(&#expr).0); }
+                quote! { #output.push_str(&#east_crate::Render::<#component_type>::render(#expr).0); }
             },
         }
     });
@@ -147,4 +147,11 @@ pub fn view_with_component(input: proc_macro::TokenStream) -> proc_macro::TokenS
     let component_type = view_with_component.component_type;
 
     generate_children_to_string(quote! { #component_type }, view_with_component.children.0.into_iter().collect()).into()
+}
+
+#[proc_macro_attribute]
+pub fn render_from_multi(args: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as ItemImpl);
+
+    unimplemented!()
 }

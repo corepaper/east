@@ -15,3 +15,8 @@ pub fn escape(input: &str) -> String {
     escape_to_string(input, &mut s);
     s
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct PreEscaped<T: AsRef<str>>(pub T);
+
+pub type Markup = PreEscaped<String>;

@@ -1,10 +1,16 @@
-use east::{Partial, NoComponent, Markup, view};
+use east::{Render, RenderMulti, NoComponent, Markup, view};
 
 #[derive(Default)]
 pub struct Index;
 
-impl<AnyComponent> Partial<AnyComponent> for Index {
-    fn view_multi(&self, children: Markup) -> Markup {
+impl<AnyComponent> Render<AnyComponent> for Index {
+    fn render(self) -> Markup {
+        RenderMulti::<AnyComponent>::render_multi(self, Default::default())
+    }
+}
+
+impl<AnyComponent> RenderMulti<AnyComponent> for Index {
+    fn render_multi(self, children: Markup) -> Markup {
         view! {
             div {
                 class: "test-class",
