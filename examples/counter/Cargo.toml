@@ -4,5 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+include_dir = "0.7"
+axum = { version = "0.6", features = ["headers"] }
+tokio = { version = "1.0", features = ["full"] }
+mime = "0.3"
+
 east = { path = "../.." }
 ui = { package = "east-example-counter-ui", path = "ui" }
+
+[build-dependencies]
+build-helper = "0.1.1"

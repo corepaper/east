@@ -30,8 +30,6 @@ impl<G: GenericNode> RenderDyn<G> for Counter {
                 "Click me", id.get().to_string()
             }
         })
-
-        // view!(cx, button(on:click = |_| id.set(2)) { "Click me" (*id.get()) })
     }
 }
 
