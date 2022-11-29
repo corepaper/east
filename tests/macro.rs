@@ -1,4 +1,4 @@
-use east::{Render, RenderMulti, NoComponent, Markup, view, render_from_multi};
+use east::{Render, RenderMulti, NoComponent, Markup, render, render_from_multi};
 
 #[derive(Default)]
 pub struct Index;
@@ -6,7 +6,7 @@ pub struct Index;
 #[render_from_multi]
 impl<AnyComponent> RenderMulti<AnyComponent> for Index {
     fn render_multi(self, children: Markup) -> Markup {
-        view! {
+        render! {
             div {
                 class: "test-class",
 
@@ -19,7 +19,7 @@ impl<AnyComponent> RenderMulti<AnyComponent> for Index {
 
 #[test]
 fn test_basic_macro() {
-    let view = view! {
+    let view = render! {
         Index {
             button { "Click me!" }
         }

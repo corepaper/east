@@ -1,6 +1,6 @@
-use east::Partial;
+use east::Render;
 use ui::{AnyComponent, Index};
 
 fn main() {
-    println!("{:?}", Partial::<AnyComponent>::view(&Index));
+    println!("{:?}", Render::<AnyComponent>::render(Index));
 }

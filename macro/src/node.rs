@@ -60,7 +60,7 @@ pub enum AttributeOrChild {
 
 impl Parse for AttributeOrChild {
     fn parse(input: ParseStream) -> Result<Self> {
-        if input.peek(syn::Ident) && input.peek2(Token![:]) {
+        if input.peek(syn::Ident) && input.peek2(Token![:]) && !input.peek3(Token![:]) {
             Ok(Self::Attribute(input.parse()?))
         } else {
             Ok(Self::Child(input.parse()?))

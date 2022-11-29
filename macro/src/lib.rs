@@ -63,14 +63,14 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
                         let name = proc_macro2::Literal::string(&format!("{}", attribute.name));
                         let value = attribute.value;
                         quote! {
-                            format!("{}=\"{}\"", #name, #east_crate::escape(#value))
+                            format!("{}=\"{}\"", #name, #east_crate::escape(&#value))
                         }
                     });
 
                     if element.children().is_empty() {
                         quote! {
                             #output.push_str("<");
-                            #output.push_str([#html_tag, #(&#attributes),*].join(" "));
+                            #output.push_str(&[#html_tag, #(&#attributes),*].join(" "));
                             #output.push_str(">");
 
                             #output.push_str("</");
@@ -133,7 +133,7 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
 }
 
 #[proc_macro]
-pub fn view(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn render(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let east_crate = east_crate();
     let view = parse_macro_input!(input as View);
     let component_type = quote! { #east_crate::NoComponent };
@@ -142,7 +142,7 @@ pub fn view(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 #[proc_macro]
-pub fn view_with_component(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn render_with_component(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let view_with_component = parse_macro_input!(input as ViewWithComponent);
     let component_type = view_with_component.component_type;
 
@@ -164,9 +164,47 @@ pub fn render_from_multi(_args: proc_macro::TokenStream, input: proc_macro::Toke
     let self_ty = input.self_ty;
 
     quote! {
+        #original
+
         impl #generics #east_crate::Render #last_trait_seg_args for #self_ty {
             fn render(self) -> #east_crate::Markup {
                 #east_crate::RenderMulti::#last_trait_seg_args::render_multi(self, Default::default())
+            }
+        }
+    }.into()
+}
+
+#[proc_macro_attribute]
+pub fn render_from_dyn(_args: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let east_crate = east_crate();
+    let input = parse_macro_input!(input as ItemImpl);
+    let original = input.clone();
+
+    let self_ty = input.self_ty;
+
+    quote! {
+        impl<AnyComponent> #east_crate::Render<AnyComponent> for #self_ty where
+            AnyComponent: From<#self_ty>
+        {
+            fn render(self) -> #east_crate::Markup {
+                if let Ok(serialized) = #east_crate::json_to_string(&self) {
+                    #east_crate::render_with_component!(AnyComponent, {
+                        div {
+                            data_component: serialized,
+                            #east_crate::PreEscaped(#east_crate::render_to_string(|cx| {
+                                self.render_dyn(cx)
+                            })),
+                        }
+                    })
+                } else {
+                    #east_crate::render_with_component!(AnyComponent, {
+                        div {
+                            #east_crate::PreEscaped(#east_crate::render_to_string(|cx| {
+                                self.render_dyn(cx)
+                            })),
+                        }
+                    })
+                }
             }
         }
 

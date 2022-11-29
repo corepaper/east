@@ -1,4 +1,4 @@
-use east::{DynViewBuilder, Component, Partial, Markup, view_with_component};
+use east::{Render, RenderDyn, Markup, render_with_component, render_from_dyn};
 use sycamore::prelude::*;
 use serde::{Serialize, Deserialize};
 
@@ -18,25 +18,22 @@ pub struct Counter {
     pub id: usize,
 }
 
-impl Component for Counter {
-    fn view_builder<G: GenericNode>(&self) -> DynViewBuilder<G> {
-        let id = self.id;
+#[render_from_dyn]
+impl<G: GenericNode> RenderDyn<G> for Counter {
+    fn render_dyn(self, cx: Scope) -> View<G> {
+        let id = create_signal(cx, self.id);
 
-        DynViewBuilder(Box::new(move |cx| {
-            let id = create_signal(cx, id);
-
-            view!(cx, button(on:click = |_| id.set(2)) { "Click me" (*id.get()) })
-        }))
+        view!(cx, button(on:click = |_| id.set(2)) { "Click me" (*id.get()) })
     }
 }
 
 pub struct Index;
 
-impl<AnyComponent> Partial<AnyComponent> for Index where
+impl<AnyComponent> Render<AnyComponent> for Index where
     AnyComponent: From<Counter>
 {
-    fn view(&self) -> Markup {
-        view_with_component!(AnyComponent, {
+    fn render(self) -> Markup {
+        render_with_component!(AnyComponent, {
             Counter { id: 1 },
             Counter { id: 2 },
         })
