@@ -8,7 +8,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sycamore = { version = "0.8", features = ["ssr", "hydrate"] }
 
-east-macro = { path = "macro" }
+east-macro = { version = "0.2", path = "macro" }
 
 [workspace]
 members = [
