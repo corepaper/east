@@ -25,6 +25,7 @@ fn east_crate() -> proc_macro2::TokenStream {
 fn normalize_tag_name(raw_name: String) -> String {
     match raw_name.as_ref() {
         "type_" => "type".to_string(),
+        "for_" => "for".to_string(),
         _ => raw_name.replace("_", "-"),
     }
 }

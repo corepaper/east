@@ -58,6 +58,16 @@ impl<T: Render<AnyComponent>, AnyComponent> Render<AnyComponent> for Vec<T> {
     }
 }
 
+impl<T: Render<AnyComponent>, AnyComponent> Render<AnyComponent> for Option<T> {
+    fn render(self) -> Markup {
+        if let Some(value) = self {
+            Render::<AnyComponent>::render(value)
+        } else {
+            PreEscaped(Default::default())
+        }
+    }
+}
+
 impl<G: GenericNode> RenderDyn<G> for String {
     fn render_dyn(self, _cx: Scope) -> View<G> {
         builder::t(self)
