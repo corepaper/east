@@ -1,5 +1,5 @@
-use east::{Render, RenderDyn, Markup, render_with_component, render_from_dyn, render_dyn};
-use sycamore::prelude::*;
+use east::{Render, RenderDyn, Markup, GenericNodeElements, render_with_component, render_from_dyn, render_dyn};
+use east::sycamore::prelude::*;
 use web_sys::Node;
 use serde::{Serialize, Deserialize};
 
@@ -18,7 +18,7 @@ impl AnyComponent {
     pub fn hydrate_to(self, parent: &Node) {
         match self {
             Self::Counter(counter) => {
-                sycamore::render_to(
+                east::sycamore::hydrate_to(
                     move |cx| counter.render_dyn(cx),
                     parent,
                 );
@@ -33,13 +33,13 @@ pub struct Counter {
 }
 
 #[render_from_dyn]
-impl<G: GenericNode> RenderDyn<G> for Counter {
+impl<G: GenericNodeElements> RenderDyn<G> for Counter {
     fn render_dyn(self, cx: Scope) -> View<G> {
         let value = create_signal(cx, 0);
 
         render_dyn!(cx, {
             button {
-                on_click: |_| value.set(2),
+                on_click: |_| value.set(*value.get() + 1),
 
                 "Click me ", self.id.to_string(),
             },

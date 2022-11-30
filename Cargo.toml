@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sycamore = { version = "0.8", features = ["ssr", "hydrate"] }
+sycamore = { git = "https://github.com/sorpaas/sycamore", branch = "sp-multi-hydrate", features = ["ssr", "hydrate"] }
 
 east-macro = { path = "macro" }
 
