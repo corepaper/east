@@ -71,14 +71,12 @@ async fn main() {
         .unwrap();
 }
 
-async fn handler() -> Html<&'static str> {
-    Html("<h1>Hello, World!</h1>")
-}
-
 async fn index() -> Html<String> {
-    html(render! {
-        title { "Counter" }
-    }, render_with_component!(AnyComponent, {
-        Index { }
-    }))
+    east::sycamore::utils::hydrate::with_hydration_context(|| {
+        html(render! {
+            title { "Counter" }
+        }, render_with_component!(AnyComponent, {
+            Index { }
+        }))
+    })
 }

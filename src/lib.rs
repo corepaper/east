@@ -7,6 +7,5 @@ pub use east_macro::{render, render_with_component, render_from_multi, render_fr
 pub use sycamore;
 pub use sycamore::prelude::*;
 pub use sycamore::{render_to_string, builder};
-pub use sycamore::generic_node::GenericNodeElements;
 pub use serde;
 pub use serde_json::to_string as json_to_string;

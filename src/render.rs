@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use crate::{Markup, PreEscaped, GenericNodeElements, Scope, View, builder};
+use crate::{Markup, PreEscaped, GenericNode, Scope, View, builder};
 
 pub trait Render<Component> {
     fn render(self) -> Markup;
@@ -9,7 +9,7 @@ pub trait RenderMulti<Component> {
     fn render_multi(self, children: Markup) -> Markup;
 }
 
-pub trait RenderDyn<G: GenericNodeElements> {
+pub trait RenderDyn<G: GenericNode> {
     fn render_dyn(self, cx: Scope) -> View<G>;
 }
 
@@ -33,13 +33,13 @@ impl<T: AsRef<str>, AnyComponent> Render<AnyComponent> for PreEscaped<T> {
     }
 }
 
-impl<G: GenericNodeElements> RenderDyn<G> for String {
+impl<G: GenericNode> RenderDyn<G> for String {
     fn render_dyn(self, _cx: Scope) -> View<G> {
         builder::t(self)
     }
 }
 
-impl<G: GenericNodeElements> RenderDyn<G> for &'static str {
+impl<G: GenericNode> RenderDyn<G> for &'static str {
     fn render_dyn(self, _cx: Scope) -> View<G> {
         builder::t(self)
     }
@@ -48,7 +48,7 @@ impl<G: GenericNodeElements> RenderDyn<G> for &'static str {
 #[derive(Serialize, Deserialize)]
 pub enum NoComponent { }
 
-impl<G: GenericNodeElements> RenderDyn<G> for NoComponent {
+impl<G: GenericNode> RenderDyn<G> for NoComponent {
     fn render_dyn(self, cx: Scope) -> View<G> {
         match self { }
     }

@@ -13,5 +13,11 @@ fn main() {
         let any_component: AnyComponent = serde_json::from_str(&item.get_attribute("data-component").expect("data-component attribute exist")).expect("parse component json succeed");
 
         any_component.hydrate_to(&item);
+
+        let hk_nodes = item.query_selector_all("[data-hk]").expect("query sub nodes succeed");
+        for i in 0..hk_nodes.length() {
+            let item = hk_nodes.get(i).expect("index within length").dyn_into::<web_sys::Element>().expect("hk node is an element");
+            item.remove_attribute("data-hk").expect("removing attribute succeed");
+        }
     }
 }

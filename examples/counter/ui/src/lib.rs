@@ -1,4 +1,4 @@
-use east::{Render, RenderDyn, Markup, GenericNodeElements, render_with_component, render_from_dyn, render_dyn};
+use east::{Render, RenderDyn, Markup, GenericNode, render_with_component, render_from_dyn, render_dyn};
 use east::sycamore::prelude::*;
 use web_sys::Node;
 use serde::{Serialize, Deserialize};
@@ -33,7 +33,7 @@ pub struct Counter {
 }
 
 #[render_from_dyn]
-impl<G: GenericNodeElements> RenderDyn<G> for Counter {
+impl<G: GenericNode> RenderDyn<G> for Counter {
     fn render_dyn(self, cx: Scope) -> View<G> {
         let value = create_signal(cx, 0);
 
