@@ -169,12 +169,31 @@ dependencies = [
 ]
 
 [[package]]
-name = "east-example-counter"
-version = "0.0.0"
+name = "east-build"
+version = "0.1.0"
 dependencies = [
  "axum",
  "build-helper",
  "east",
+ "include_dir",
+ "mime",
+]
+
+[[package]]
+name = "east-build-helper"
+version = "0.1.0"
+dependencies = [
+ "build-helper",
+]
+
+[[package]]
+name = "east-example-counter"
+version = "0.0.0"
+dependencies = [
+ "axum",
+ "east",
+ "east-build",
+ "east-build-helper",
  "east-example-counter-ui",
  "include_dir",
  "mime",

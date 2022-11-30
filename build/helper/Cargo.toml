@@ -1,0 +1,9 @@
+[package]
+name = "east-build-helper"
+version = "0.1.0"
+edition = "2021"
+description = "Build helper for East."
+license = "Apache-2.0"
+
+[dependencies]
+build-helper = "0.1.1"

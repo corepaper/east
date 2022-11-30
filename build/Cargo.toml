@@ -1,0 +1,14 @@
+[package]
+name = "east-build"
+version = "0.1.0"
+edition = "2021"
+description = "Build integration for East."
+license = "Apache-2.0"
+
+[dependencies]
+include_dir = "0.7"
+axum = { version = "0.6", features = ["headers"] }
+mime = "0.3"
+build-helper = "0.1.1"
+
+east = { path = ".." }
