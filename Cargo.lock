@@ -187,7 +187,10 @@ version = "0.1.0"
 dependencies = [
  "east",
  "serde",
+ "serde_json",
  "sycamore",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

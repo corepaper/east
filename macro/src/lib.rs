@@ -289,10 +289,12 @@ pub fn render_from_dyn(_args: proc_macro::TokenStream, input: proc_macro::TokenS
 
     quote! {
         impl<AnyComponent> #east_crate::Render<AnyComponent> for #self_ty where
-            AnyComponent: From<#self_ty>
+            AnyComponent: #east_crate::serde::Serialize + From<#self_ty>
         {
             fn render(self) -> #east_crate::Markup {
-                if let Ok(serialized) = #east_crate::json_to_string(&self) {
+                let any_component = AnyComponent::from(self.clone());
+
+                if let Ok(serialized) = #east_crate::json_to_string(&any_component) {
                     #east_crate::render_with_component!(AnyComponent, {
                         div {
                             data_component: serialized,

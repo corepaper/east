@@ -1,3 +1,4 @@
+use serde::{Serialize, Deserialize};
 use crate::{Markup, PreEscaped, GenericNode, Scope, View, builder};
 
 pub trait Render<Component> {
@@ -44,6 +45,7 @@ impl<'a, G: GenericNode> RenderDyn<G> for &'a str {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum NoComponent { }
 
 impl<G: GenericNode> RenderDyn<G> for NoComponent {

@@ -1,8 +1,9 @@
 use east::{Render, RenderDyn, Markup, render_with_component, render_from_dyn, render_dyn};
 use sycamore::prelude::*;
+use web_sys::Node;
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum AnyComponent {
     Counter(Counter),
 }
@@ -13,7 +14,20 @@ impl From<Counter> for AnyComponent {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+impl AnyComponent {
+    pub fn hydrate_to(self, parent: &Node) {
+        match self {
+            Self::Counter(counter) => {
+                sycamore::render_to(
+                    move |cx| counter.render_dyn(cx),
+                    parent,
+                );
+            }
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Counter {
     pub id: usize,
 }
@@ -21,25 +35,30 @@ pub struct Counter {
 #[render_from_dyn]
 impl<G: GenericNode> RenderDyn<G> for Counter {
     fn render_dyn(self, cx: Scope) -> View<G> {
-        let id = create_signal(cx, self.id);
+        let value = create_signal(cx, 0);
 
         render_dyn!(cx, {
             button {
-                on_click: |_| id.set(2),
+                on_click: |_| value.set(2),
 
-                "Click me", id.get().to_string()
+                "Click me ", self.id.to_string(),
+            },
+            p {
+                "value: ", value.get().to_string(),
             }
         })
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Index;
 
 impl<AnyComponent> Render<AnyComponent> for Index where
-    AnyComponent: From<Counter>
+    AnyComponent: Serialize + From<Counter>
 {
     fn render(self) -> Markup {
         render_with_component!(AnyComponent, {
+            "This is static",
             Counter { id: 1 },
             Counter { id: 2 },
         })
