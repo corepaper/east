@@ -2,6 +2,8 @@
 name = "east-macro"
 version = "0.1.0"
 edition = "2021"
+description = "Macros for East"
+license = "Apache-2.0"
 
 [lib]
 proc-macro = true
