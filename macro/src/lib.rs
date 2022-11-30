@@ -1,16 +1,24 @@
 mod node;
 
-use syn::{Result, Ident, Token, ItemImpl, parse_macro_input, parenthesized, bracketed, braced, parse::{Parse, ParseStream}, ext::IdentExt, token::{Paren, Bracket}};
+use crate::node::{Child, Children};
 use proc_macro2::Span;
 use proc_macro_crate::{crate_name, FoundCrate};
 use quote::quote;
-use crate::node::{Child, Children};
+use syn::{
+    braced, bracketed,
+    ext::IdentExt,
+    parenthesized,
+    parse::{Parse, ParseStream},
+    parse_macro_input,
+    token::{Bracket, Paren},
+    Ident, ItemImpl, Result, Token,
+};
 
 fn east_crate() -> proc_macro2::TokenStream {
     let found_crate = crate_name("east").expect("east is present in `Cargo.toml`");
 
     match found_crate {
-        FoundCrate::Itself => quote!( crate ),
+        FoundCrate::Itself => quote!(crate),
         FoundCrate::Name(name) => {
             let ident = Ident::new(&name, Span::call_site());
             quote!( #ident )
@@ -18,7 +26,10 @@ fn east_crate() -> proc_macro2::TokenStream {
     }
 }
 
-fn generate_children_to_string(component_type: proc_macro2::TokenStream, children: Vec<Child>) -> proc_macro2::TokenStream {
+fn generate_children_to_string(
+    component_type: proc_macro2::TokenStream,
+    children: Vec<Child>,
+) -> proc_macro2::TokenStream {
     let east_crate = east_crate();
     let output = Ident::new("__east_output", Span::mixed_site());
 
@@ -104,69 +115,67 @@ fn generate_children_to_string(component_type: proc_macro2::TokenStream, childre
 fn generate_children_to_view(scope: Ident, children: Vec<Child>) -> proc_macro2::TokenStream {
     let east_crate = east_crate();
 
-    let children = children.into_iter().map(|child| {
-        match child {
-            Child::Element(element) => {
-                if let Some(html_tag) = element.html_tag() {
-                    let attributes = element.attributes().into_iter().map(|attribute| {
-                        let raw_name = format!("{}", attribute.name).replace("_", "-");
+    let children = children.into_iter().map(|child| match child {
+        Child::Element(element) => {
+            if let Some(html_tag) = element.html_tag() {
+                let attributes = element.attributes().into_iter().map(|attribute| {
+                    let raw_name = format!("{}", attribute.name).replace("_", "-");
 
-                        if raw_name.starts_with("on-") {
-                            let mut raw_name = raw_name;
-                            let name = proc_macro2::Literal::string(&raw_name.split_off(3));
-                            let value = attribute.value;
+                    if raw_name.starts_with("on-") {
+                        let mut raw_name = raw_name;
+                        let name = proc_macro2::Literal::string(&raw_name.split_off(3));
+                        let value = attribute.value;
 
-                            quote! {
-                                .on(#name, #value)
-                            }
-                        } else {
-                            let name = proc_macro2::Literal::string(&raw_name);
-                            let value = attribute.value;
-
-                            quote! {
-                                .dyn_attr(#name, { let #scope = #scope.clone(); move || #value })
-                            }
-                        }
-                    });
-
-                    let children = if element.children().is_empty() {
-                        quote! { }
-                    } else {
-                        let children = generate_children_to_view(scope.clone(), element.children());
                         quote! {
-                            .dyn_c({ let #scope = #scope.clone(); move || #children })
+                            .on(#name, #value)
                         }
-                    };
+                    } else {
+                        let name = proc_macro2::Literal::string(&raw_name);
+                        let value = attribute.value;
 
-                    let html_tag = proc_macro2::Literal::string(&html_tag);
+                        quote! {
+                            .dyn_attr(#name, { let #scope = #scope.clone(); move || #value })
+                        }
+                    }
+                });
+
+                let children = if element.children().is_empty() {
+                    quote! {}
+                } else {
+                    let children = generate_children_to_view(scope.clone(), element.children());
                     quote! {
-                        #east_crate::builder::tag(#html_tag)
-                        #(#attributes)*
-                        #children
-                        .view(#scope)
+                        .dyn_c({ let #scope = #scope.clone(); move || #children })
+                    }
+                };
+
+                let html_tag = proc_macro2::Literal::string(&html_tag);
+                quote! {
+                    #east_crate::builder::tag(#html_tag)
+                    #(#attributes)*
+                    #children
+                    .view(#scope)
+                }
+            } else {
+                let tag = element.tag.clone();
+                let attributes = element.attributes().into_iter().map(|attribute| {
+                    let name = attribute.name;
+                    let value = attribute.value;
+                    quote! { #name: #value }
+                });
+
+                if element.children().is_empty() {
+                    quote! {
+                        #east_crate::RenderDyn::render_dyn(#tag {
+                            #(#attributes),*
+                        }, #scope.clone())
                     }
                 } else {
-                    let tag = element.tag.clone();
-                    let attributes = element.attributes().into_iter().map(|attribute| {
-                        let name = attribute.name;
-                        let value = attribute.value;
-                        quote! { #name: #value }
-                    });
-
-                    if element.children().is_empty() {
-                        quote! {
-                            #east_crate::RenderDyn::render_dyn(#tag {
-                                #(#attributes),*
-                            }, #scope.clone())
-                        }
-                    } else {
-                        panic!("Dynamic element tags do not support children.");
-                    }
+                    panic!("Dynamic element tags do not support children.");
                 }
-            },
-            Child::Expr(expr) => {
-                quote! { #east_crate::RenderDyn::render_dyn(#expr, #scope) }
-            },
+            }
+        }
+        Child::Expr(expr) => {
+            quote! { #east_crate::RenderDyn::render_dyn(#expr, #scope) }
         }
     });
 
@@ -224,7 +233,11 @@ pub fn render_with_component(input: proc_macro::TokenStream) -> proc_macro::Toke
     let view_with_component = parse_macro_input!(input as RenderWithComponent);
     let component_type = view_with_component.component_type;
 
-    generate_children_to_string(quote! { #component_type }, view_with_component.children.0.into_iter().collect()).into()
+    generate_children_to_string(
+        quote! { #component_type },
+        view_with_component.children.0.into_iter().collect(),
+    )
+    .into()
 }
 
 #[derive(Clone, Debug)]
@@ -251,18 +264,31 @@ impl Parse for RenderDyn {
 pub fn render_dyn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let render_dyn = parse_macro_input!(input as RenderDyn);
 
-    generate_children_to_view(render_dyn.scope_ident, render_dyn.children.0.into_iter().collect()).into()
+    generate_children_to_view(
+        render_dyn.scope_ident,
+        render_dyn.children.0.into_iter().collect(),
+    )
+    .into()
 }
 
 #[proc_macro_attribute]
-pub fn render_from_multi(_args: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn render_from_multi(
+    _args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let east_crate = east_crate();
     let input = parse_macro_input!(input as ItemImpl);
     let original = input.clone();
 
     let generics = input.generics;
-    let last_trait_seg = input.trait_.expect("trait must exist").1
-        .segments.last().expect("component type must exist").clone();
+    let last_trait_seg = input
+        .trait_
+        .expect("trait must exist")
+        .1
+        .segments
+        .last()
+        .expect("component type must exist")
+        .clone();
     let last_trait_seg_args = last_trait_seg.arguments;
     assert_eq!(format!("{}", last_trait_seg.ident), "RenderMulti");
 
@@ -280,7 +306,10 @@ pub fn render_from_multi(_args: proc_macro::TokenStream, input: proc_macro::Toke
 }
 
 #[proc_macro_attribute]
-pub fn render_from_dyn(_args: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn render_from_dyn(
+    _args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let east_crate = east_crate();
     let input = parse_macro_input!(input as ItemImpl);
     let original = input.clone();
@@ -316,5 +345,6 @@ pub fn render_from_dyn(_args: proc_macro::TokenStream, input: proc_macro::TokenS
         }
 
         #original
-    }.into()
+    }
+    .into()
 }

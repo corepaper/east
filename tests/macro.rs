@@ -1,4 +1,4 @@
-use east::{Render, RenderMulti, NoComponent, Markup, render, render_from_multi};
+use east::{render, render_from_multi, Markup, NoComponent, Render, RenderMulti};
 
 #[derive(Default)]
 pub struct Index;
@@ -24,5 +24,8 @@ fn test_basic_macro() {
             button { "Click me!" }
         }
     };
-    assert_eq!(view.0, "<div class=\"test-class\">This is a test page.<button>Click me!</button></div>");
+    assert_eq!(
+        view.0,
+        "<div class=\"test-class\">This is a test page.<button>Click me!</button></div>"
+    );
 }

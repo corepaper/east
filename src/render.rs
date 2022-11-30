@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
-use crate::{Markup, PreEscaped, GenericNode, Scope, View, builder};
+use crate::{builder, GenericNode, Markup, PreEscaped, Scope, View};
+use serde::{Deserialize, Serialize};
 
 pub trait Render<Component> {
     fn render(self) -> Markup;
@@ -46,10 +46,10 @@ impl<G: GenericNode> RenderDyn<G> for &'static str {
 }
 
 #[derive(Serialize, Deserialize)]
-pub enum NoComponent { }
+pub enum NoComponent {}
 
 impl<G: GenericNode> RenderDyn<G> for NoComponent {
     fn render_dyn(self, cx: Scope) -> View<G> {
-        match self { }
+        match self {}
     }
 }

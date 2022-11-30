@@ -1,7 +1,9 @@
-use east::{Render, RenderDyn, Markup, GenericNode, render_with_component, render_from_dyn, render_dyn};
 use east::sycamore::prelude::*;
+use east::{
+    render_dyn, render_from_dyn, render_with_component, GenericNode, Markup, Render, RenderDyn,
+};
+use serde::{Deserialize, Serialize};
 use web_sys::Node;
-use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum AnyComponent {
@@ -18,10 +20,7 @@ impl AnyComponent {
     pub fn hydrate_to(self, parent: &Node) {
         match self {
             Self::Counter(counter) => {
-                east::sycamore::hydrate_to(
-                    move |cx| counter.render_dyn(cx),
-                    parent,
-                );
+                east::sycamore::hydrate_to(move |cx| counter.render_dyn(cx), parent);
             }
         }
     }
@@ -53,8 +52,9 @@ impl<G: GenericNode> RenderDyn<G> for Counter {
 #[derive(Debug, Clone)]
 pub struct Index;
 
-impl<AnyComponent> Render<AnyComponent> for Index where
-    AnyComponent: Serialize + From<Counter>
+impl<AnyComponent> Render<AnyComponent> for Index
+where
+    AnyComponent: Serialize + From<Counter>,
 {
     fn render(self) -> Markup {
         render_with_component!(AnyComponent, {

@@ -1,7 +1,13 @@
-use east::{Markup, Render, render, render_with_component};
-use ui::{AnyComponent, Index};
-use axum::{TypedHeader, routing, headers::ContentType, response::{Html, Response, IntoResponse}, routing::get, Router};
+use axum::{
+    headers::ContentType,
+    response::{Html, IntoResponse, Response},
+    routing,
+    routing::get,
+    Router, TypedHeader,
+};
+use east::{render, render_with_component, Markup, Render};
 use std::{net::SocketAddr, str::FromStr};
+use ui::{AnyComponent, Index};
 
 static UI_FILES: include_dir::Dir<'static> = include_dir::include_dir!("$OUT_DIR/dist");
 
@@ -13,15 +19,9 @@ pub struct Asset {
 impl IntoResponse for Asset {
     fn into_response(self) -> Response {
         let mime = match self.ext.as_ref().map(|s| s.as_ref()) {
-            Some("html") => {
-                Some(mime::TEXT_HTML)
-            }
-            Some("css") => {
-                Some(mime::TEXT_CSS)
-            }
-            Some("js") => {
-                Some(mime::TEXT_JAVASCRIPT)
-            }
+            Some("html") => Some(mime::TEXT_HTML),
+            Some("css") => Some(mime::TEXT_CSS),
+            Some("js") => Some(mime::TEXT_JAVASCRIPT),
             Some("wasm") => {
                 Some(mime::Mime::from_str("application/wasm").expect("wasm is valid mime"))
             }
@@ -38,11 +38,15 @@ impl IntoResponse for Asset {
 
 fn html(header: Markup, body: Markup) -> Html<String> {
     let template_file = UI_FILES.get_file("index.html").expect("index file exist");
-    let template = template_file.contents_utf8().expect("template is valid utf8");
+    let template = template_file
+        .contents_utf8()
+        .expect("template is valid utf8");
 
-    Html(template
-         .replace("<!-- header -->", &header.0)
-         .replace("<!-- body -->", &body.0))
+    Html(
+        template
+            .replace("<!-- header -->", &header.0)
+            .replace("<!-- body -->", &body.0),
+    )
 }
 
 #[tokio::main]
@@ -52,11 +56,18 @@ async fn main() {
 
     for entry in UI_FILES.entries() {
         if let Some(file) = entry.as_file() {
-            let ext = file.path().extension().and_then(|s| s.to_str()).map(|s| s.to_owned());
+            let ext = file
+                .path()
+                .extension()
+                .and_then(|s| s.to_str())
+                .map(|s| s.to_owned());
             let path = file.path().to_string_lossy();
             let content = file.contents().to_vec();
 
-            app = app.route(&("/".to_string() + &path), routing::get(move || async { Asset { ext, content } }));
+            app = app.route(
+                &("/".to_string() + &path),
+                routing::get(move || async { Asset { ext, content } }),
+            );
         }
     }
 
@@ -73,10 +84,11 @@ async fn main() {
 
 async fn index() -> Html<String> {
     east::sycamore::utils::hydrate::with_hydration_context(|| {
-        html(render! {
-            title { "Counter" }
-        }, render_with_component!(AnyComponent, {
-            Index { }
-        }))
+        html(
+            render! {
+                title { "Counter" }
+            },
+            render_with_component!(AnyComponent, { Index {} }),
+        )
     })
 }
