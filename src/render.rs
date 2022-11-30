@@ -48,6 +48,16 @@ impl<T: AsRef<str>, AnyComponent> Render<AnyComponent> for PreEscaped<T> {
     }
 }
 
+impl<T: Render<AnyComponent>, AnyComponent> Render<AnyComponent> for Vec<T> {
+    fn render(self) -> Markup {
+        let mut s = String::new();
+        for r in self {
+            s.push_str(&Render::<AnyComponent>::render(r).0);
+        }
+        PreEscaped(s)
+    }
+}
+
 impl<G: GenericNode> RenderDyn<G> for String {
     fn render_dyn(self, _cx: Scope) -> View<G> {
         builder::t(self)
