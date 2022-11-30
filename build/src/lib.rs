@@ -25,6 +25,8 @@ macro_rules! include_trunk_assets {
 
         impl $crate::axum::response::IntoResponse for $asset_ty {
             fn into_response(self) -> $crate::axum::response::Response {
+                use std::str::FromStr;
+
                 let mime = match self.ext.as_ref().map(|s| s.as_ref()) {
                     Some("html") => Some($crate::mime::TEXT_HTML),
                     Some("css") => Some($crate::mime::TEXT_CSS),
