@@ -1,7 +1,7 @@
 use east::sycamore::prelude::*;
 use east::{
-    HydrateTo,
-    render_dyn, render_from_dyn, render_with_component, GenericNode, Markup, Render, RenderDyn,
+    render_dyn, render_from_dyn, render_with_component, GenericNode, HydrateTo, Markup, Render,
+    RenderDyn,
 };
 use serde::{Deserialize, Serialize};
 

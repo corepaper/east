@@ -5,9 +5,9 @@ use proc_macro2::Span;
 use proc_macro_crate::{crate_name, FoundCrate};
 use quote::quote;
 use syn::{
-    braced, Data, Fields, DeriveInput,
+    braced,
     parse::{Parse, ParseStream},
-    parse_macro_input, Ident, ItemImpl, Result, Token,
+    parse_macro_input, Data, DeriveInput, Fields, Ident, ItemImpl, Result, Token,
 };
 
 fn east_crate() -> proc_macro2::TokenStream {
@@ -361,7 +361,10 @@ pub fn derive_hydrate_to(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         let variants = data.variants.into_iter().map(|variant| {
             let variant_ident = variant.ident;
             if let Fields::Unnamed(fields) = variant.fields {
-                assert!(fields.unnamed.len() == 1, "HydrateTo only deals with single field variant.");
+                assert!(
+                    fields.unnamed.len() == 1,
+                    "HydrateTo only deals with single field variant."
+                );
 
                 quote! {
                     Self::#variant_ident(value) => {
@@ -383,7 +386,8 @@ pub fn derive_hydrate_to(input: proc_macro::TokenStream) -> proc_macro::TokenStr
                     }
                 }
             }
-        }.into()
+        }
+        .into()
     } else {
         panic!("Unsupported HydrateTo derive type, only enum is supported.");
     }
