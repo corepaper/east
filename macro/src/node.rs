@@ -5,7 +5,7 @@ use syn::{
     Result, Token,
 };
 
-pub static HTML_TAGS: [&'static str; 78] = [
+pub static HTML_TAGS: [&'static str; 80] = [
     "a",
     "abbr",
     "acronym",
