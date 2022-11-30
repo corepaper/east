@@ -5,7 +5,7 @@ use proc_macro2::Span;
 use proc_macro_crate::{crate_name, FoundCrate};
 use quote::quote;
 use syn::{
-    braced,
+    braced, Data, Fields, DeriveInput,
     parse::{Parse, ParseStream},
     parse_macro_input, Ident, ItemImpl, Result, Token,
 };
@@ -348,4 +348,43 @@ pub fn render_from_dyn(
         #original
     }
     .into()
+}
+
+/// Derive `HydrateTo` for an enum.
+#[proc_macro_derive(HydrateTo)]
+pub fn derive_hydrate_to(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let east_crate = east_crate();
+    let input = parse_macro_input!(input as DeriveInput);
+    let ident = input.ident;
+
+    if let Data::Enum(data) = input.data {
+        let variants = data.variants.into_iter().map(|variant| {
+            let variant_ident = variant.ident;
+            if let Fields::Unnamed(fields) = variant.fields {
+                assert!(fields.unnamed.len() == 1, "HydrateTo only deals with single field variant.");
+
+                quote! {
+                    Self::#variant_ident(value) => {
+                        #east_crate::sycamore::hydrate_to(move |cx| value.render_dyn(cx), parent);
+                    }
+                }
+            } else {
+                panic!("HydrateTo only supports unnamed fields.");
+            }
+        });
+
+        quote! {
+            impl #east_crate::HydrateTo for #ident {
+                fn hydrate_to(self, parent: &#east_crate::web_sys::Node) {
+                    use #east_crate::RenderDyn;
+
+                    match self {
+                        #(#variants),*
+                    }
+                }
+            }
+        }.into()
+    } else {
+        panic!("Unsupported HydrateTo derive type, only enum is supported.");
+    }
 }

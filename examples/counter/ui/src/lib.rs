@@ -1,11 +1,11 @@
 use east::sycamore::prelude::*;
 use east::{
+    HydrateTo,
     render_dyn, render_from_dyn, render_with_component, GenericNode, Markup, Render, RenderDyn,
 };
 use serde::{Deserialize, Serialize};
-use web_sys::Node;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, HydrateTo, Debug, Clone)]
 pub enum AnyComponent {
     Counter(Counter),
 }
@@ -13,16 +13,6 @@ pub enum AnyComponent {
 impl From<Counter> for AnyComponent {
     fn from(counter: Counter) -> Self {
         Self::Counter(counter)
-    }
-}
-
-impl AnyComponent {
-    pub fn hydrate_to(self, parent: &Node) {
-        match self {
-            Self::Counter(counter) => {
-                east::sycamore::hydrate_to(move |cx| counter.render_dyn(cx), parent);
-            }
-        }
     }
 }
 
