@@ -2,6 +2,8 @@
 name = "east"
 version = "0.2.0"
 edition = "2021"
+description = "Full-stack web library for island architecture."
+license = "Apache-2.0"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
