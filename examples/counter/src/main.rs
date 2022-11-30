@@ -1,6 +1,6 @@
 use axum::{routing, Router};
 use east::{render, render_with_component};
-use std::{net::SocketAddr, str::FromStr};
+use std::net::SocketAddr;
 use ui::{AnyComponent, Index};
 
 east_build::include_trunk_assets! {

@@ -22,6 +22,13 @@ fn east_crate() -> proc_macro2::TokenStream {
     }
 }
 
+fn normalize_tag_name(raw_name: String) -> String {
+    match raw_name.as_ref() {
+        "type_" => "type".to_string(),
+        _ => raw_name.replace("_", "-"),
+    }
+}
+
 fn generate_children_to_string(
     component_type: proc_macro2::TokenStream,
     children: Vec<Child>,
@@ -34,7 +41,7 @@ fn generate_children_to_string(
             Child::Element(element) => {
                 if let Some(html_tag) = element.html_tag() {
                     let attributes = element.attributes().into_iter().map(|attribute| {
-                        let raw_name = format!("{}", attribute.name).replace("_", "-");
+                        let raw_name = normalize_tag_name(format!("{}", attribute.name));
 
                         let name = proc_macro2::Literal::string(&raw_name);
                         let value = attribute.value;
@@ -115,7 +122,7 @@ fn generate_children_to_view(scope: Ident, children: Vec<Child>) -> proc_macro2:
         Child::Element(element) => {
             if let Some(html_tag) = element.html_tag() {
                 let attributes = element.attributes().into_iter().map(|attribute| {
-                    let raw_name = format!("{}", attribute.name).replace("_", "-");
+                    let raw_name = normalize_tag_name(format!("{}", attribute.name));
 
                     if raw_name.starts_with("on-") {
                         let mut raw_name = raw_name;
