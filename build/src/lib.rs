@@ -59,7 +59,7 @@ macro_rules! include_trunk_assets {
 
                         app = app.route(
                             &("/".to_string() + &path),
-                            routing::get(move || async { $asset_ty { ext, content } }),
+                            $crate::axum::routing::get(move || async { $asset_ty { ext, content } }),
                         );
                     }
                 }
