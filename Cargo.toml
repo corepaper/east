@@ -1,6 +1,6 @@
 [package]
 name = "east"
-version = "0.2.0"
+version = "0.3.0-dev"
 edition = "2021"
 description = "Full-stack web library for island architecture."
 license = "Apache-2.0"
@@ -10,7 +10,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sycamore = { version = "0.8", features = ["ssr", "hydrate"] }
 
-east-macro = { version = "0.2", path = "macro" }
+east-macro = { version = "0.3.0-dev", path = "macro" }
 
 [workspace]
 members = [

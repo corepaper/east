@@ -160,7 +160,7 @@ dependencies = [
 
 [[package]]
 name = "east"
-version = "0.2.0"
+version = "0.3.0-dev"
 dependencies = [
  "east-macro",
  "serde",
@@ -170,7 +170,7 @@ dependencies = [
 
 [[package]]
 name = "east-example-counter"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "axum",
  "build-helper",
@@ -183,7 +183,7 @@ dependencies = [
 
 [[package]]
 name = "east-example-counter-ui"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "east",
  "serde",
@@ -194,7 +194,7 @@ dependencies = [
 
 [[package]]
 name = "east-macro"
-version = "0.2.0"
+version = "0.3.0-dev"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
