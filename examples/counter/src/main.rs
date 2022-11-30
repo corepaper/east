@@ -2,10 +2,9 @@ use axum::{
     headers::ContentType,
     response::{Html, IntoResponse, Response},
     routing,
-    routing::get,
     Router, TypedHeader,
 };
-use east::{render, render_with_component, Markup, Render};
+use east::{render, render_with_component, Markup};
 use std::{net::SocketAddr, str::FromStr};
 use ui::{AnyComponent, Index};
 

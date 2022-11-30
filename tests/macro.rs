@@ -1,4 +1,4 @@
-use east::{render, render_from_multi, Markup, NoComponent, Render, RenderMulti};
+use east::{render, render_from_multi, Markup, RenderMulti};
 
 #[derive(Default)]
 pub struct Index;

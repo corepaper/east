@@ -5,12 +5,9 @@ use proc_macro2::Span;
 use proc_macro_crate::{crate_name, FoundCrate};
 use quote::quote;
 use syn::{
-    braced, bracketed,
-    ext::IdentExt,
-    parenthesized,
+    braced,
     parse::{Parse, ParseStream},
     parse_macro_input,
-    token::{Bracket, Paren},
     Ident, ItemImpl, Result, Token,
 };
 
@@ -211,8 +208,8 @@ pub fn render(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[derive(Clone, Debug)]
 struct RenderWithComponent {
     component_type: syn::Type,
-    comma_token: Token![,],
-    brace_token: syn::token::Brace,
+    _comma_token: Token![,],
+    _brace_token: syn::token::Brace,
     children: Children,
 }
 
@@ -221,8 +218,8 @@ impl Parse for RenderWithComponent {
         let content;
         Ok(Self {
             component_type: input.parse()?,
-            comma_token: input.parse()?,
-            brace_token: braced!(content in input),
+            _comma_token: input.parse()?,
+            _brace_token: braced!(content in input),
             children: content.parse()?,
         })
     }
@@ -243,8 +240,8 @@ pub fn render_with_component(input: proc_macro::TokenStream) -> proc_macro::Toke
 #[derive(Clone, Debug)]
 struct RenderDyn {
     scope_ident: Ident,
-    comma_token: Token![,],
-    brace_token: syn::token::Brace,
+    _comma_token: Token![,],
+    _brace_token: syn::token::Brace,
     children: Children,
 }
 
@@ -253,8 +250,8 @@ impl Parse for RenderDyn {
         let content;
         Ok(Self {
             scope_ident: input.parse()?,
-            comma_token: input.parse()?,
-            brace_token: braced!(content in input),
+            _comma_token: input.parse()?,
+            _brace_token: braced!(content in input),
             children: content.parse()?,
         })
     }

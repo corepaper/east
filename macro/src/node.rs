@@ -1,11 +1,8 @@
 use syn::{
-    braced, bracketed,
-    ext::IdentExt,
-    parenthesized,
+    braced,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token::{Bracket, Paren},
-    Ident, Result, Token,
+    Result, Token,
 };
 
 pub static HTML_TAGS: [&'static str; 78] = [

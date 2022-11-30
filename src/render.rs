@@ -49,7 +49,7 @@ impl<G: GenericNode> RenderDyn<G> for &'static str {
 pub enum NoComponent {}
 
 impl<G: GenericNode> RenderDyn<G> for NoComponent {
-    fn render_dyn(self, cx: Scope) -> View<G> {
+    fn render_dyn(self, _cx: Scope) -> View<G> {
         match self {}
     }
 }
