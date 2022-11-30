@@ -7,8 +7,7 @@ use quote::quote;
 use syn::{
     braced,
     parse::{Parse, ParseStream},
-    parse_macro_input,
-    Ident, ItemImpl, Result, Token,
+    parse_macro_input, Ident, ItemImpl, Result, Token,
 };
 
 fn east_crate() -> proc_macro2::TokenStream {
@@ -196,6 +195,7 @@ impl Parse for Render {
     }
 }
 
+/// Render a static markup without any dynamic component.
 #[proc_macro]
 pub fn render(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let east_crate = east_crate();
@@ -225,6 +225,7 @@ impl Parse for RenderWithComponent {
     }
 }
 
+/// Render a static markup with given dynamic component type.
 #[proc_macro]
 pub fn render_with_component(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let view_with_component = parse_macro_input!(input as RenderWithComponent);
@@ -257,6 +258,7 @@ impl Parse for RenderDyn {
     }
 }
 
+/// Render a dynamic component.
 #[proc_macro]
 pub fn render_dyn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let render_dyn = parse_macro_input!(input as RenderDyn);
@@ -268,6 +270,7 @@ pub fn render_dyn(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     .into()
 }
 
+/// Implement `Render` from `RenderMulti`.
 #[proc_macro_attribute]
 pub fn render_from_multi(
     _args: proc_macro::TokenStream,
@@ -302,6 +305,7 @@ pub fn render_from_multi(
     }.into()
 }
 
+/// Implement `Render` from `RenderDyn`.
 #[proc_macro_attribute]
 pub fn render_from_dyn(
     _args: proc_macro::TokenStream,

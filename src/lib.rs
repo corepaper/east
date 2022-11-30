@@ -1,3 +1,6 @@
+//! East is an opinioned Rust full-stack web library for island
+//! architecture.
+
 mod markup;
 mod render;
 

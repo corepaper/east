@@ -1,8 +1,7 @@
 use axum::{
     headers::ContentType,
     response::{Html, IntoResponse, Response},
-    routing,
-    Router, TypedHeader,
+    routing, Router, TypedHeader,
 };
 use east::{render, render_with_component, Markup};
 use std::{net::SocketAddr, str::FromStr};
