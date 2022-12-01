@@ -46,7 +46,9 @@ macro_rules! include_trunk_assets {
         }
 
         /// Route assets.
-        pub fn $route_assets(mut app: $crate::axum::Router) -> $crate::axum::Router {
+        pub fn $route_assets<S>(mut app: $crate::axum::Router<S>) -> $crate::axum::Router<S> where
+            S: Clone + Send + Sync + 'static,
+        {
             for entry in $asset_files.entries() {
                 if let Some(file) = entry.as_file() {
                     let ext = file
